@@ -1,9 +1,9 @@
 function love.load()
-	Object = require("classic/classic")
-	Player = require("classes/player")()
-	Enemy = require("classes/enemy")()
+	Object = require("classic.classic")
+	Player = require("classes.player")()
+	Enemy = require("classes.enemy")()
 	Bullets = {}
-	Bullet = require("classes/bullet")
+	Bullet = require("classes.bullet")
 end
 
 function love.update(dt)

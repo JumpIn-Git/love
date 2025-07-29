@@ -3,7 +3,7 @@ local M = Object:extend()
 function M:new()
 	self.image = love.graphics.newImage("assets/panda.png")
 	self.width = self.image:getWidth()
-	self.x = love.graphics.getWidth() / 2 - self.width / 2
+	self.x = (love.graphics.getWidth() - self.width) / 2
 	self.y = 0
 	self.speed = 320
 end
