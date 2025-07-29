@@ -8,6 +8,12 @@ function M:new()
 	self.speed = 320
 end
 
+function M:keypressed(key)
+	if key == "space" then
+		table.insert(Bullets, Bullet())
+	end
+end
+
 function M:update(dt)
 	if love.keyboard.isDown("left") then
 		self.x = self.x - self.speed * dt
