@@ -17,26 +17,26 @@ end
 
 function Board.draw()
     love.graphics.draw(Board.img)
-    local data = {}
-    for rowIdx, row in ipairs(Board) do
-        for columnIdx, piece in pairs(row) do
+    for tileY, row in ipairs(Board) do
+        for tileX, piece in pairs(row) do
             if piece then
                 local color, type = unpack(piece)
-                local x, y = 7 + ((columnIdx - 1) * 16), 7 + ((rowIdx - 1) * 16)
+                local x, y = Offset + ((tileX - 1) * 16), Offset + ((tileY - 1) * 16)
                 if piece == Selected then
-                    data.x, data.y = x, y
-                    data.rowIdx, data.columnIdx = rowIdx, columnIdx
+                    print(tileX .. tileY)
+                    Selected.x, Selected.y = x, y
+                    Selected.tileY, Selected.tileX = tileY, tileX
                 end
                 love.graphics.draw(_G[color].img, _G[color][type], x, y)
             end
         end
     end
     if Selected then
-        love.graphics.circle("line", data.x + 8, data.y + 8, 8)
+        love.graphics.circle("line", Selected.x + Tile / 2, Selected.y + Tile / 2, Tile / 2)
         if Logic[Selected[2]] then
-            local canMoveTo = Logic[Selected[2]](Selected, data.columnIdx, data.rowIdx)
+            local canMoveTo = Logic[Selected[2]](Selected, Selected.tileX, Selected.tileY)
             for _, i in ipairs(canMoveTo) do
-                love.graphics.circle("line", 7 + i.x * 16, 7 + i.y * 16, 8)
+                love.graphics.circle("line", Offset - Tile / 2 + (i.x * 16), Offset - Tile / 2 + (i.y * 16), Tile / 2)
             end
         end
     end
