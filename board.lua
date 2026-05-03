@@ -15,17 +15,19 @@ function Board.reset()
     end
 end
 
+Board.reset()
+
 function Board.draw()
     love.graphics.draw(Board.img)
-    for tileY, row in ipairs(Board) do
-        for tileX, piece in pairs(row) do
+    for tY, row in ipairs(Board) do
+        for tX, piece in pairs(row) do
             if piece then
                 local color, type = unpack(piece)
-                local x, y = Offset + ((tileX - 1) * 16), Offset + ((tileY - 1) * 16)
+                local x, y = Offset + ((tX - 1) * Tile), Offset + ((tY - 1) * Tile)
                 if piece == Selected then
-                    print(tileX .. tileY)
+                    print(string.format('drawn: %d %d', tX, tY))
                     Selected.x, Selected.y = x, y
-                    Selected.tileY, Selected.tileX = tileY, tileX
+                    Selected.tY, Selected.tX = tY, tX
                 end
                 love.graphics.draw(_G[color].img, _G[color][type], x, y)
             end
@@ -34,12 +36,24 @@ function Board.draw()
     if Selected then
         love.graphics.circle("line", Selected.x + Tile / 2, Selected.y + Tile / 2, Tile / 2)
         if Logic[Selected[2]] then
-            local canMoveTo = Logic[Selected[2]](Selected, Selected.tileX, Selected.tileY)
-            for _, i in ipairs(canMoveTo) do
-                love.graphics.circle("line", Offset - Tile / 2 + (i.x * 16), Offset - Tile / 2 + (i.y * 16), Tile / 2)
+            Selected.canMoveTo = Logic[Selected[2]](Selected, Selected.tX, Selected.tY)
+            for _, i in ipairs(Selected.canMoveTo) do
+                love.graphics.circle("line",
+                    Offset + (i.x * Tile) - Tile / 2,
+                    Offset + (i.y * Tile) - Tile / 2,
+                    Tile / 2)
             end
         end
     end
 end
 
-Board.reset()
+function Board.reverse()
+    local i, j = 1, #Board
+    while i < j do
+        Board[i], Board[j] = Board[j], Board[i]
+        i = i + 1
+        j = j - 1
+    end
+
+    Turn = Turn == 'White' and 'Black' or 'White'
+end

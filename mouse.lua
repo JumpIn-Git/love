@@ -13,13 +13,30 @@ function love.mousepressed(x, y, b)
         return
     end
     x, y = push:toGame(x, y)
-    if x == nil or y == nil then
-        return
-    end
+    if x == nil or y == nil then return end
     x, y = mouseToTile(x, y)
     if x == nil then return end
 
-    if Board[y][x] then
-        Selected = Board[y][x]
+    local pressed = Board[y][x]
+    if Selected then
+        -- Move to tile
+        for _, i in ipairs(Selected.canMoveTo) do
+            if i.x == x and i.y == y then
+                Board[y][x] = Selected
+                Board[Selected.tY][Selected.tX] = nil
+                Selected = nil
+                Board.reverse()
+                return
+            end
+        end
+        -- Switch Selected
+        if pressed and pressed[1] == Selected[1] then
+            Selected = pressed
+        else
+            -- Unfocus
+            Selected = nil
+        end
+    elseif pressed and pressed[1] == Turn then
+        Selected = pressed
     end
 end
