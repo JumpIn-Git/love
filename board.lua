@@ -1,6 +1,22 @@
 Board = {} -- Board[Row(y)][Column(x)]
 Board.img = love.graphics.newImage("tiles/boards/board_plain_05.png")
 Board.img:setFilter('nearest', 'nearest')
+Board.idx = 5
+
+function love.keypressed(key)
+    if key == "space" then
+        Board.idx = Board.idx + 1
+        if Board.idx == 6 then
+            Board.idx = 1
+        end
+        Board.img = love.graphics.newImage(string.format("tiles/boards/board_plain_0%d.png", Board.idx))
+        Board.img:setFilter('nearest', 'nearest')
+    end
+    if key == 'r' then
+        Board.reset()
+        if Turn ~= 'White' then Board.reverse() end
+    end
+end
 
 function Board.reset()
     for i = 1, 8 do Board[i] = {} end
@@ -25,7 +41,6 @@ function Board.draw()
                 local color, type = unpack(piece)
                 local x, y = Offset + ((tX - 1) * Tile), Offset + ((tY - 1) * Tile)
                 if piece == Selected then
-                    print(string.format('drawn: %d %d', tX, tY))
                     Selected.x, Selected.y = x, y
                     Selected.tY, Selected.tX = tY, tX
                 end
@@ -48,12 +63,12 @@ function Board.draw()
 end
 
 function Board.reverse()
-    local i, j = 1, #Board
-    while i < j do
-        Board[i], Board[j] = Board[j], Board[i]
-        i = i + 1
-        j = j - 1
-    end
+    -- local i, j = 1, #Board
+    -- while i < j do
+    --     Board[i], Board[j] = Board[j], Board[i]
+    --     i = i + 1
+    --     j = j - 1
+    -- end
 
     Turn = Turn == 'White' and 'Black' or 'White'
 end
