@@ -5,16 +5,13 @@ Board.idx = 5
 
 function love.keypressed(key)
     if key == "space" then
-        Board.idx = Board.idx + 1
-        if Board.idx == 6 then
-            Board.idx = 1
-        end
+        Board.idx = math.min(5, Board.idx + 1)
         Board.img = love.graphics.newImage(string.format("tiles/boards/board_plain_0%d.png", Board.idx))
         Board.img:setFilter('nearest', 'nearest')
     end
     if key == 'r' then
         Board.reset()
-        if Turn ~= 'White' then Board.reverse() end
+        Turn = Turn == 'White' and 'Black' or 'White'
     end
 end
 
