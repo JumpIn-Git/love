@@ -1,129 +1,95 @@
 Logic = {}
-local function outOfBounds(tX, tY, x, y)
-    if tX + x > 8 or tX + x < 1 or
-        tY + y > 8 or tY + y < 1 then
-        return true
-    end
-    return false
+local function isValid(x, y)
+    return x >= 1 and x <= 8 and y >= 1 and y <= 8
 end
-
-Logic[Pawn] = function(piece, tX, tY)
-    if tY == 1 or tY == 8 then
-        return {}
-    end
-    local up = Turn == 'White' and -1 or 1
-    local start = Turn == 'White' and 7 or 2
-    local t = {}
-    if Board[tY + up][tX] == nil then
-        table.insert(t, { x = tX, y = tY + up })
-    end
-    if tY == start and Board[tY + up + up][tX] == nil then
-        table.insert(t, { x = tX, y = tY + up + up })
-    end
-    for _, i in ipairs { 1, -1 } do
-        if tX + i > 8 or tX + i < 1 then goto continue end
-        if Board[tY + up][tX + i] and Board[tY + up][tX + i][1] ~= piece[1] then
-            table.insert(t, { x = tX + i, y = tY + up })
+local function addSlidingMoves(t, piece, tX, tY, directions)
+    for _, dir in ipairs(directions) do
+        local nX, nY = tX + dir[1], tY + dir[2]
+        while isValid(nX, nY) do
+            local target = Board[nY][nX]
+            if not target then
+                table.insert(t, { x = nX, y = nY })
+            else
+                if target[1] ~= piece[1] then
+                    table.insert(t, { x = nX, y = nY })
+                end
+                break -- Hit a piece, stop sliding
+            end
+            nX, nY = nX + dir[1], nY + dir[2]
         end
-        ::continue::
     end
-    return t
 end
 
-Logic[Bishop] = function(piece, tX, tY)
+Logic[Pawn] = function(p, tX, tY)
     local t = {}
-    for _, x in ipairs { 1, -1 } do
-        for _, y in ipairs { 1, -1 } do
-            if outOfBounds(tX, tY, x, y) then goto continue end
-            local nextX, nextY = tX + x, tY + y
-            while nextX >= 1 and nextX <= 8 and nextY >= 1 and nextY <= 8 and Board[nextY][nextX] == nil do
-                table.insert(t, { x = nextX, y = nextY })
-                nextX, nextY = nextX + x, nextY + y
-            end
-            if nextX >= 1 and nextX <= 8 and nextY >= 1 and nextY <= 8 and Board[nextY][nextX] and Board[nextY][nextX][1] ~= piece[1] then
-                table.insert(t, { x = nextX, y = nextY })
-            end
-            ::continue::
+    if isValid(tX, tY + -1) and not Board[tY + -1][tX] then
+        table.insert(t, { x = tX, y = tY + -1 })
+        -- Double jump
+        if tY == 7 and not Board[tY + -1 * 2][tX] then
+            table.insert(t, { x = tX, y = tY + -1 * 2 })
+        end
+    end
+    -- Capture
+    for _, side in ipairs({ -1, 1 }) do
+        local nX, nY = tX + side, tY + -1
+        if isValid(nX, nY) and Board[nY][nX] and Board[nY][nX][1] ~= p[1] then
+            table.insert(t, { x = nX, y = nY })
         end
     end
     return t
 end
 
-Logic[King] = function(piece, tX, tY)
+Logic[Horse] = function(p, tX, tY)
     local t = {}
-    for _, x in ipairs { 1, 0, -1 } do
-        for _, y in ipairs { 1, 0, -1 } do
-            if outOfBounds(tX, tY, x, y) then goto continue end
-            local targeting = Board[tY + y][tX + x]
-            if targeting == nil or targeting[1] ~= piece[1] then
-                table.insert(t, { x = tX + x, y = tY + y })
+    local offsets = { { 1, 2 }, { 2, 1 }, { -1, 2 }, { -2, 1 }, { 1, -2 }, { 2, -1 }, { -1, -2 }, { -2, -1 } }
+    for _, o in ipairs(offsets) do
+        local nX, nY = tX + o[1], tY + o[2]
+        if isValid(nX, nY) then
+            local target = Board[nY][nX]
+            if not target or target[1] ~= p[1] then
+                table.insert(t, { x = nX, y = nY })
             end
-            ::continue::
         end
     end
     return t
 end
 
-Logic[Horse] = function(piece, tX, tY)
-    local moves = { { 1, 2 }, { 2, 1 }, { -1, 2 }, { -2, 1 }, { 1, -2 }, { 2, -1 }, { -1, -2 }, { -2, -1 } } --{x,y}
+Logic[King] = function(p, tX, tY)
     local t = {}
-    for _, move in ipairs(moves) do
-        local x, y = unpack(move)
-        if outOfBounds(tX, tY, x, y) then goto continue end
-        local targeting = Board[tY + y][tX + x]
-        if targeting == nil or targeting[1] ~= piece[1] then
-            table.insert(t, { x = tX + x, y = tY + y })
+    for dx = -1, 1 do
+        for dy = -1, 1 do
+            if not (dx == 0 and dy == 0) then
+                local nX, nY = tX + dx, tY + dy
+                if isValid(nX, nY) then
+                    local target = Board[nY][nX]
+                    if not target or target[1] ~= p[1] then
+                        table.insert(t, { x = nX, y = nY })
+                    end
+                end
+            end
         end
-        ::continue::
     end
     return t
 end
 
-Logic[Tower] = function(piece, tX, tY)
+local cardinals = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
+local diagonals = { { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } }
+
+Logic[Tower] = function(p, x, y)
     local t = {}
-    for _, x in ipairs { 1, -1 } do
-        local nextX = tX + x
-        if nextX > 8 or nextX < 1 then goto continue_x end
-
-        while nextX <= 8 and nextX >= 1 and Board[tY][nextX] == nil do
-            table.insert(t, { x = nextX, y = tY })
-            nextX = nextX + x
-        end
-        if nextX <= 8 and nextX >= 1 and Board[tY][nextX] then
-            if Board[tY][nextX][1] ~= piece[1] then
-                table.insert(t, { x = nextX, y = tY })
-            end
-        end
-        ::continue_x::
-    end
-    for _, y in ipairs { 1, -1 } do
-        local nextY = tY + y
-        if nextY > 8 or nextY < 1 then goto continue_y end
-        while nextY <= 8 and nextY >= 1 and Board[nextY][tX] == nil do
-            table.insert(t, { x = tX, y = nextY })
-            nextY = nextY + y
-        end
-        if nextY <= 8 and nextY >= 1 and Board[nextY][tX] then
-            if Board[nextY][tX][1] ~= piece[1] then
-                table.insert(t, { x = tX, y = nextY })
-            end
-        end
-        ::continue_y::
-    end
-
+    addSlidingMoves(t, p, x, y, cardinals)
     return t
 end
 
-Logic[Queen] = function(...)
-    local function tableMerge(...)
-        local result = {}
-        for _, t in ipairs({ ... }) do
-            for _, v in ipairs(t) do
-                table.insert(result, v)
-            end
-        end
-        return result
-    end
+Logic[Bishop] = function(p, x, y)
+    local t = {}
+    addSlidingMoves(t, p, x, y, diagonals)
+    return t
+end
 
-    return tableMerge(Logic[Bishop](...), Logic[Tower](...))
+Logic[Queen] = function(p, x, y)
+    local t = {}
+    addSlidingMoves(t, p, x, y, cardinals)
+    addSlidingMoves(t, p, x, y, diagonals)
+    return t
 end

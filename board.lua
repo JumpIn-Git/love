@@ -9,10 +9,11 @@ function love.keypressed(key)
         Board.img = love.graphics.newImage(string.format("tiles/boards/board_plain_0%d.png", Board.idx))
         Board.img:setFilter('nearest', 'nearest')
     end
-    if key == 'r' then
-        Board.reset()
-        Turn = Turn == 'White' and 'Black' or 'White'
-    end
+    -- Maybe turn into disconnect and reset?
+    -- if key == 'r' then
+    --     Board.reset()
+    --     Turn = Turn == 'White' and 'Black' or 'White'
+    -- end
 end
 
 function Board.reset()
@@ -60,12 +61,10 @@ function Board.draw()
 end
 
 function Board.reverse()
-    -- local i, j = 1, #Board
-    -- while i < j do
-    --     Board[i], Board[j] = Board[j], Board[i]
-    --     i = i + 1
-    --     j = j - 1
-    -- end
-
-    Turn = Turn == 'White' and 'Black' or 'White'
+    local i, j = 1, #Board
+    while i < j do
+        Board[i], Board[j] = Board[j], Board[i]
+        i = i + 1
+        j = j - 1
+    end
 end

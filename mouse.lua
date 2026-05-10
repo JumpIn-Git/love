@@ -8,7 +8,7 @@ local function mouseToTile(x, y)
     return math.floor((x - Offset) / Tile) + 1, math.floor((y - Offset) / Tile) + 1
 end
 function love.mousepressed(x, y, b)
-    if b ~= 1 or Gameover then
+    if b ~= 1 or Gameover or (not Gamestarted) or (not Ourturn) then
         return
     end
     x, y = push:toGame(x, y)
@@ -28,8 +28,14 @@ function love.mousepressed(x, y, b)
                 end
                 Board[y][x] = Selected
                 Board[Selected.tY][Selected.tX] = nil
+                Ourturn = false
+                local msg = string.format(
+                    'return {%d,%d,%d,%d,%s}\n', -(Selected.tX - 9), -(Selected.tY - 9), -(x - 9), -(y - 9),
+                    Gameover                                                                                          -- -9 to flip for other perspective
+                )
+                print(Color .. ' sending ' .. msg)
+                Client:send(msg)
                 Selected = nil
-                Board.reverse()
                 return
             end
         end
@@ -41,7 +47,7 @@ function love.mousepressed(x, y, b)
             Selected = nil
         end
         -- Not selected anything yet
-    elseif pressed and pressed[1] == Turn then
+    elseif pressed and pressed[1] == Color then
         Selected = pressed
         Selected.tX, Selected.tY = x, y
         Selected.canMoveTo = Logic[Selected[2]](Selected, Selected.tX, Selected.tY)
