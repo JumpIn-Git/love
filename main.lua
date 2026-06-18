@@ -34,11 +34,11 @@ State.cwd = posix.getcwd() or (function()
 end)()
 
 local function sigint_handler(signum)
-    -- Forked processes will exit themself when they recieve sigint
-    debug.sethook(function() -- Hook will run before executing next line, resulting in a error stopping pcall
-        debug.sethook()      -- Immediately turn the hook off
-        error(posix.SIGINT, 0)
-    end, "", 1)
+    debug.sethook(
+        function()      -- Hook will run before executing next line in correct context, resulting in a error stopping pcall
+            debug.sethook() -- Immediately turn the hook off
+            error(posix.SIGINT, 0)
+        end, "", 1)
 end
 posix.signal(posix.SIGINT, sigint_handler)
 
