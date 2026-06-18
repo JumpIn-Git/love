@@ -35,10 +35,10 @@ end)()
 
 local function sigint_handler(signum)
     debug.sethook(
-        function()      -- Hook will run before executing next line in correct context, resulting in a error stopping pcall
+        function()          -- Hook will run before executing next line in correct context, resulting in a error stopping pcall
             debug.sethook() -- Immediately turn the hook off
             error(posix.SIGINT, 0)
-        end, "", 1)
+        end, 'l')
 end
 posix.signal(posix.SIGINT, sigint_handler)
 
