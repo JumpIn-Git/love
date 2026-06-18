@@ -1,6 +1,7 @@
 io.stdout:setvbuf("no")
 require 'builtins'
 require 'lib'
+
 Name = 'pojit'
 State = {
     version = '0.0.0 (luaposix)',
@@ -9,6 +10,15 @@ State = {
     },
     status = nil
 }
+
+local parser = argparse(Name, 'A luaJIT shell using luaposix.')
+parser:flag('-v --version')
+local res = parser:parse()
+if res.version then
+    print(State.version)
+    os.exit(0)
+end
+
 State.home = posix.getenv('HOME') or (posix.getpwuid(posix.getuid()) or {}).pw_dir or (function()
     io.stderr:write('shell-init: No HOME found, defaulting to root\n')
     return '/'
@@ -23,18 +33,10 @@ State.cwd = posix.getcwd() or (function()
     return State.home
 end)()
 
-local parser = argparse(Name, 'A luaJIT shell using luaposix.')
-parser:flag('-v --version')
-local res = parser:parse()
-if res.version then
-    print(State.version)
-    os.exit(0)
-end
-
--- 2. Register SIGINT (Ctrl+C) handler to interrupt Lua execution via a debug hook
 local function sigint_handler(signum)
-    debug.sethook(function()
-        debug.sethook() -- Immediately turn the hook off
+    -- Forked processes will exit themself when they recieve sigint
+    debug.sethook(function() -- Hook will run before executing next line, resulting in a error stopping pcall
+        debug.sethook()      -- Immediately turn the hook off
         error(posix.SIGINT, 0)
     end, "", 1)
 end

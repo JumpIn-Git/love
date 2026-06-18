@@ -1,11 +1,11 @@
 {
-    "runtime": {
-        "version": "LuaJIT"
-    },
-    "workspace": {
-        "library": [
-            "/nix/store/x6nj6xh94nwplmyip6r070bijhb7hdi5-luajit2.1-argparse-0.7.2-1/share/lua/5.1"
-        ],
-        "checkThirdParty": false
-    }
+  "runtime": {
+    "version": "LuaJIT"
+  },
+  "workspace": {
+    "checkThirdParty": false
+  },
+  "diagnostics": {
+    "disable": ["redefined-local"]
+  }
 }
