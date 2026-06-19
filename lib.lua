@@ -33,7 +33,7 @@ function CallParseNoExit(parser, args)
     return ok, res
 end
 
-function Run(program, args, aliased)
+function Run(program, args, aliased, pipe)
     if Builtins[program] then
         State.status = Builtins[program](args) or 0
         return

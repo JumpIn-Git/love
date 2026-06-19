@@ -1,6 +1,7 @@
 io.stdout:setvbuf("no")
 require 'builtins'
 require 'lib'
+require 'lexer'
 
 Name = 'pojit'
 State = {
@@ -53,15 +54,14 @@ while true do
             return posix.EOF
         end
 
-        local args = {}
-        for w in input:gmatch('%S+') do
-            table.insert(args, w)
-        end
-
-        if #args > 0 then
-            local program = table.remove(args, 1)
-            Run(program, args) -- Executes builtins or external forks
-        end
+        local nextCmdPos = 1 ---@type integer?
+        repeat
+            local program, args, newPos = Lexer(input, nextCmdPos)
+            if program then
+                Run(program, args) -- Executes builtins or external forks
+            end
+            nextCmdPos = newPos
+        until (newPos == nil)
     end)
 
     if not ok then
