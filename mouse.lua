@@ -12,9 +12,9 @@ function love.mousepressed(x, y, b)
         return
     end
     x, y = push:toGame(x, y)
-    if x == nil or y == nil then return end
+    if x == nil or y == nil then return end -- out of bounds
     x, y = mouseToTile(x, y)
-    if x == nil then return end
+    if x == nil then return end             -- no tile selected
 
     local pressed = Board[y][x]
     if Selected then
@@ -31,7 +31,7 @@ function love.mousepressed(x, y, b)
                 Ourturn = false
                 local msg = string.format(
                     'return {%d,%d,%d,%d,%s}\n', -(Selected.tX - 9), -(Selected.tY - 9), -(x - 9), -(y - 9),
-                    Gameover                                                                                          -- -9 to flip for other perspective
+                    Gameover -- -9 to flip for other perspective
                 )
                 print(Color .. ' sending ' .. msg)
                 Client:send(msg)
