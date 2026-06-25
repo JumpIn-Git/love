@@ -8,7 +8,7 @@
   outputs = {nixpkgs, ...}: let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-    lua = pkgs.luajit.withPackages (ps: [ps.argparse ps.luaposix ps.penlight]);
+    lua = pkgs.luajit.withPackages (ps: [ps.argparse ps.luaposix ps.ansicolors ps.readline]);
   in {
     devShells.${system}.default = pkgs.mkShell {
       packages = [

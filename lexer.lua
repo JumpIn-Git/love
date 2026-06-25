@@ -5,8 +5,11 @@ function Lexer(str, pos)
     pos = str:find("%S", pos)
     if not pos then return nil, nil, nil end
 
-    if str:sub(pos, pos) == ";" then
+    local first_char = str:sub(pos, pos)
+    if first_char == ";" then
         error("syntax error: command starting with ';'")
+    elseif first_char == "|" then
+        error("syntax error: command starting with '|'")
     end
 
     local first_word = nil
@@ -16,8 +19,8 @@ function Lexer(str, pos)
     while pos do
         local char = str:sub(pos, pos)
 
-        if char == ";" then
-            return first_word, words, pos + 1
+        if char == ";" or char == "|" then
+            return first_word, words, pos + 1, char
         end
 
         -- High-performance optimization: Use a table array as a string buffer
@@ -27,7 +30,7 @@ function Lexer(str, pos)
         while pos <= len do
             char = str:sub(pos, pos)
 
-            if char == " " or char == "\t" or char == ";" then
+            if char == " " or char == "\t" or char == ";" or char == "|" then
                 break
             elseif char == '"' or char == "'" then
                 local closing = str:find(char, pos + 1, true)
@@ -39,7 +42,7 @@ function Lexer(str, pos)
                 buf_idx = buf_idx + 1
                 pos = closing + 1
             else
-                local next_delim = str:find("[%s;\"']", pos)
+                local next_delim = str:find("[%s;|\"']", pos)
                 local end_pos = next_delim or (len + 1)
                 local segment = str:sub(pos, end_pos - 1)
 
@@ -67,5 +70,5 @@ function Lexer(str, pos)
         pos = str:find("%S", pos)
     end
 
-    return first_word, words, nil
+    return first_word, words, nil, nil
 end

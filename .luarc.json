@@ -3,7 +3,12 @@
     "version": "LuaJIT"
   },
   "workspace": {
-    "checkThirdParty": false
+    "checkThirdParty": false,
+    "library": [
+      "luaposix-annotations",
+      "argparse-definitions",
+      "/home/cinnamon/Downloads/idk/readline-3.3/readline.lua"
+    ]
   },
   "diagnostics": {
     "disable": ["redefined-local"]

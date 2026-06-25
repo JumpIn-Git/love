@@ -1,23 +1,20 @@
-io.stdout:setvbuf("no")
-require 'builtins'
-require 'lib'
-require 'lexer'
-
 Name = 'pojit'
 State = {
     version = '0.0.0 (luaposix)',
-    alias = {
-        ls = { 'ls', { '--color=auto' }, }
-    },
+    alias = { ls = { 'ls', { '--color=auto' }, } },
     status = nil
 }
+io.stdout:setvbuf("no")
+
+require 'builtins'
+require 'lib'
+require 'lexer'
 
 local parser = argparse(Name, 'A luaJIT shell using luaposix.')
 parser:flag('-v --version')
 local res = parser:parse()
 if res.version then
-    print(State.version)
-    os.exit(0)
+    print(State.version); os.exit(0)
 end
 
 State.home = posix.getenv('HOME') or (posix.getpwuid(posix.getuid()) or {}).pw_dir or (function()
@@ -46,22 +43,52 @@ posix.signal(posix.SIGINT, sigint_handler)
 while true do
     local ok, err = pcall(function()
         SetPrompt()
-        io.write(State.prompt)
-        io.flush()
+        local input
+        local done
+        RL.handler_install(State.prompt, function(str)
+            if str then
+                RL.add_history(str)
+                RL.save_history()
+            end
+            RL.handler_remove()
+            input = str
+            done = true
+        end)
+        local fds = { [0] = { events = { IN = true } } }
+        while true do
+            posix.poll(fds, -1)
+            if fds[0].revents.IN then
+                RL.read_char()
+            end
+            if done then break end
+        end
 
-        local input = io.read()
         if input == nil then -- Ctrl+D
             return posix.EOF
         end
 
         local nextCmdPos = 1 ---@type integer?
         repeat
-            local program, args, newPos = Lexer(input, nextCmdPos)
-            if program then
-                Run(program, args) -- Executes builtins or external forks
+            local pipeline = {}
+            local prev_sep
+
+            repeat
+                local program, args, newPos, sep = Lexer(input, nextCmdPos)
+                if program then
+                    table.insert(pipeline, { program, args })
+                elseif prev_sep == "|" then
+                    error("syntax error: expected command after '|'")
+                end
+                nextCmdPos = newPos
+                prev_sep = sep
+            until nextCmdPos == nil or prev_sep ~= "|"
+
+            if #pipeline > 1 then
+                RunPipeline(pipeline)
+            elseif #pipeline == 1 then
+                Run(pipeline[1][1], pipeline[1][2])
             end
-            nextCmdPos = newPos
-        until (newPos == nil)
+        until nextCmdPos == nil
     end)
 
     if not ok then
